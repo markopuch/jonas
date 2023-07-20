@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 # --- Import libraries
 
@@ -8,7 +8,7 @@ import numpy as np
 import time
 import actionlib
 
-from std_msgs.msg import Int32MultiArray, Bool, String
+from std_msgs.msg import Int16MultiArray, Bool, String
 
 from jonas.srv import sequence, sequenceResponse
 
@@ -27,14 +27,14 @@ class Planner(object):
 
     action_active = False
 
-    msg = Int32MultiArray()
+    msg = Int16MultiArray()
 
 
     def __init__(self):
 
         # ------------------------------------- Create publisher
 
-        self.jointPublisher = rospy.Publisher("joint_value",Int32MultiArray, queue_size=10)
+        self.jointPublisher = rospy.Publisher("joint_value",Int16MultiArray, queue_size=10)
         
         rospy.sleep(0.005)
 

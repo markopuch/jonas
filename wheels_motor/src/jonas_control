@@ -55,6 +55,16 @@ def callback_base(data):
 		vy = (data.data[1]/100.0)*vxy_max
 		w = 0
 
+	if data.data[0] == 9: 
+		vx = 0
+		vy = 0
+		w = (data.data[1]/100.0)*w_max
+
+	if data.data[0] == 10: 
+		vx = 0
+		vy = 0
+		w = -(data.data[1]/100.0)*w_max
+
 	print(vx)
 	print(vy)
 	print(w)
@@ -76,12 +86,12 @@ if __name__ == '__main__':
 
 	while not rospy.is_shutdown():
 	
-	#Velocidades del robot
-	# vx =  (speed/100)*vxy_max
-	# vy = (speed/100)*vxy_max
-	# w = (speed/100)*w_max
+		#Velocidades del robot
+		#vx =  (speed/100)*vxy_max
+		#vy = (speed/100)*vxy_max
+		#w = (speed/100)*w_max
 	
-	#Enviar velocidades
-	# send_vel_robot(vx,vy,w)
+		#Enviar velocidades
+		#send_vel_robot(vx,vy,w)
 	
 		rate.sleep()
