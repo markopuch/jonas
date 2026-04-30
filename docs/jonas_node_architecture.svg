@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+  <title id="title">Jonas robot ROS 2 node architecture</title>
+  <desc id="desc">Communication diagram between PC nodes, Raspberry Pi nodes, and Jonas robot peripherals.</desc>
+  <defs>
+    <marker id="arrow-blue" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M2,2 L11,6.5 L2,11 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M2,2 L11,6.5 L2,11 Z" fill="#059669"/>
+    </marker>
+    <marker id="arrow-gray" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M2,2 L11,6.5 L2,11 Z" fill="#475569"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M2,2 L11,6.5 L2,11 Z" fill="#d97706"/>
+    </marker>
+    <style>
+      .page { fill: #f8fafc; }
+      .pc-panel { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2.2; }
+      .rpi-panel { fill: #ecfdf5; stroke: #34d399; stroke-width: 2.2; }
+      .bus-panel { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.8; }
+      .node { fill: #ffffff; stroke: #111827; stroke-width: 1.9; }
+      .topic { fill: #f8fafc; stroke-width: 1.8; }
+      .topic-blue { stroke: #93c5fd; }
+      .topic-green { stroke: #6ee7b7; }
+      .topic-gray { stroke: #94a3b8; }
+      .hardware { fill: #fff7ed; stroke: #f59e0b; stroke-width: 1.8; }
+      .title { font-family: Arial, sans-serif; font-size: 34px; font-weight: 700; fill: #0f172a; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 17px; font-weight: 400; fill: #475569; }
+      .panel-title { font-family: Arial, sans-serif; font-size: 24px; font-weight: 700; fill: #0f172a; }
+      .node-title { font-family: Arial, sans-serif; font-size: 21px; font-weight: 700; fill: #0f172a; }
+      .node-text { font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; fill: #334155; }
+      .topic-title { font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; fill: #0f172a; }
+      .topic-text { font-family: Arial, sans-serif; font-size: 14px; font-weight: 400; fill: #475569; }
+      .legend-title { font-family: Arial, sans-serif; font-size: 17px; font-weight: 700; fill: #0f172a; }
+      .legend-text { font-family: Arial, sans-serif; font-size: 15px; font-weight: 400; fill: #334155; }
+      .blue { stroke: #2563eb; }
+      .green { stroke: #059669; }
+      .gray { stroke: #475569; }
+      .orange { stroke: #d97706; }
+    </style>
+  </defs>
+
+  <rect class="page" x="0" y="0" width="1400" height="820"/>
+
+  <text class="title" x="44" y="54">Jonas ROS 2 node architecture</text>
+  <text class="subtitle" x="44" y="83">Static workspace view: PC nodes, Raspberry Pi nodes, topics, service, and expected peripherals.</text>
+
+  <rect class="pc-panel" x="40" y="120" width="420" height="540" rx="18"/>
+  <text class="panel-title" x="70" y="160">PC / laptop</text>
+  <text class="subtitle" x="70" y="188">remote_pc.launch.py</text>
+
+  <rect class="bus-panel" x="500" y="120" width="340" height="540" rx="18"/>
+  <text class="panel-title" x="530" y="160">ROS 2 network</text>
+  <text class="subtitle" x="530" y="188">shared topics and service</text>
+
+  <rect class="rpi-panel" x="880" y="120" width="480" height="540" rx="18"/>
+  <text class="panel-title" x="910" y="160">Raspberry Pi / robot</text>
+  <text class="subtitle" x="910" y="188">jonas.launch.py</text>
+
+  <rect class="node" x="80" y="235" width="335" height="132" rx="12"/>
+  <text class="node-title" x="110" y="272">/interface_pc</text>
+  <text class="node-text" x="110" y="302">interface_pc / interface_pc</text>
+  <text class="node-text" x="110" y="328">Remote control PyQt GUI</text>
+  <text class="node-text" x="110" y="354">Publishes base, face, and gesture commands</text>
+
+  <rect class="node" x="80" y="455" width="335" height="132" rx="12"/>
+  <text class="node-title" x="110" y="492">/sequence_planner</text>
+  <text class="node-text" x="110" y="522">jonas / sequence_planner</text>
+  <text class="node-text" x="110" y="548">Converts gestures into poses</text>
+  <text class="node-text" x="110" y="574">sequence_service client</text>
+
+  <rect class="node" x="910" y="220" width="260" height="112" rx="12"/>
+  <text class="node-title" x="938" y="257">/wheels</text>
+  <text class="node-text" x="938" y="287">wheels_motor</text>
+  <text class="node-text" x="938" y="313">jonas_control</text>
+
+  <rect class="node" x="910" y="375" width="260" height="112" rx="12"/>
+  <text class="node-title" x="938" y="412">/interface_rpi</text>
+  <text class="node-text" x="938" y="442">interface_rpi</text>
+  <text class="node-text" x="938" y="468">face display</text>
+
+  <rect class="node" x="910" y="525" width="260" height="112" rx="12"/>
+  <text class="node-title" x="938" y="562">/motor_movement</text>
+  <text class="node-text" x="938" y="592">jonas</text>
+  <text class="node-text" x="938" y="618">Dynamixel control</text>
+
+  <rect class="hardware" x="1200" y="220" width="130" height="112" rx="12"/>
+  <text class="node-title" x="1220" y="252">Base</text>
+  <text class="node-text" x="1220" y="280">3 Arduinos</text>
+  <text class="node-text" x="1220" y="306">jonas_usb1-3</text>
+
+  <rect class="hardware" x="1200" y="375" width="130" height="112" rx="12"/>
+  <text class="node-title" x="1220" y="414">Display</text>
+  <text class="node-text" x="1220" y="444">face</text>
+
+  <rect class="hardware" x="1200" y="525" width="130" height="112" rx="12"/>
+  <text class="node-title" x="1220" y="564">Dynamixel</text>
+  <text class="node-text" x="1220" y="594">bus servos</text>
+  <text class="node-text" x="1220" y="620">jonas_usb0</text>
+
+  <rect x="540" y="222" width="260" height="72" rx="10" fill="#f8fafc" stroke="#93c5fd" stroke-width="1.8"/>
+  <text class="topic-title" x="560" y="250">mov_coms_topic</text>
+  <text class="topic-text" x="560" y="272">Int16MultiArray</text>
+  <text class="topic-text" x="560" y="290">[command, velocity %]</text>
+
+  <rect x="540" y="347" width="260" height="72" rx="10" fill="#f8fafc" stroke="#93c5fd" stroke-width="1.8"/>
+  <text class="topic-title" x="560" y="375">face_coms_topic</text>
+  <text class="topic-text" x="560" y="397">String</text>
+  <text class="topic-text" x="560" y="415">blink, fire, heart...</text>
+
+  <rect x="540" y="480" width="260" height="72" rx="10" fill="#f8fafc" stroke="#6ee7b7" stroke-width="1.8"/>
+  <text class="topic-title" x="560" y="508">joint_value</text>
+  <text class="topic-text" x="560" y="530">Int16MultiArray</text>
+  <text class="topic-text" x="560" y="548">6 target positions</text>
+
+  <rect x="540" y="568" width="260" height="58" rx="10" fill="#f8fafc" stroke="#6ee7b7" stroke-width="1.8"/>
+  <text class="topic-title" x="560" y="594">motors_status</text>
+  <text class="topic-text" x="560" y="616">Bool: moving / stopped</text>
+
+  <rect x="540" y="420" width="260" height="44" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.8"/>
+  <text class="topic-title" x="560" y="448">sequence_service</text>
+
+  <path class="blue" d="M415 270 H540" fill="none" stroke-width="4" marker-end="url(#arrow-blue)"/>
+  <path class="blue" d="M800 258 H910" fill="none" stroke-width="4" marker-end="url(#arrow-blue)"/>
+
+  <path class="blue" d="M415 318 C470 318, 485 383, 540 383" fill="none" stroke-width="4" marker-end="url(#arrow-blue)"/>
+  <path class="blue" d="M800 383 H910" fill="none" stroke-width="4" marker-end="url(#arrow-blue)"/>
+
+  <path class="blue" d="M248 367 V455" fill="none" stroke-width="4" marker-end="url(#arrow-blue)"/>
+  <rect x="260" y="390" width="180" height="50" rx="10" fill="#f8fafc" stroke="#93c5fd" stroke-width="1.8"/>
+  <text class="topic-title" x="276" y="413">servos_coms_topic</text>
+  <text class="topic-text" x="276" y="433">String: gestures</text>
+
+  <path class="green" d="M415 515 H540" fill="none" stroke-width="4" marker-end="url(#arrow-green)"/>
+  <path class="green" d="M800 516 H910" fill="none" stroke-width="4" marker-end="url(#arrow-green)"/>
+
+  <path class="green" d="M910 600 C850 632, 830 610, 800 597" fill="none" stroke-width="4" marker-end="url(#arrow-green)"/>
+  <path class="green" d="M540 597 H415" fill="none" stroke-width="4" marker-end="url(#arrow-green)"/>
+
+  <path class="gray" d="M415 476 C470 442, 500 442, 540 442" fill="none" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#arrow-gray)"/>
+  <path class="gray" d="M800 442 C850 442, 870 545, 910 565" fill="none" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#arrow-gray)"/>
+
+  <path class="orange" d="M1170 276 H1200" fill="none" stroke-width="4" marker-end="url(#arrow-orange)"/>
+  <path class="orange" d="M1170 431 H1200" fill="none" stroke-width="4" marker-end="url(#arrow-orange)"/>
+  <path class="orange" d="M1170 581 H1200" fill="none" stroke-width="4" marker-end="url(#arrow-orange)"/>
+
+  <rect x="40" y="690" width="1320" height="92" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.8" rx="14"/>
+  <text class="legend-title" x="72" y="724">Legend</text>
+  <line x1="72" y1="750" x2="122" y2="750" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow-blue)"/>
+  <text class="legend-text" x="142" y="755">Commands published from the PC GUI</text>
+  <line x1="450" y1="750" x2="500" y2="750" stroke="#059669" stroke-width="4" marker-end="url(#arrow-green)"/>
+  <text class="legend-text" x="520" y="755">Sequence control and motor state</text>
+  <line x1="845" y1="750" x2="895" y2="750" stroke="#475569" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#arrow-gray)"/>
+  <text class="legend-text" x="915" y="755">sequence_service service</text>
+  <line x1="1130" y1="750" x2="1180" y2="750" stroke="#d97706" stroke-width="4" marker-end="url(#arrow-orange)"/>
+  <text class="legend-text" x="1200" y="755">Hardware output</text>
+</svg>

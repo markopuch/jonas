@@ -1,0 +1,14 @@
+# Jonas serial ports - stable aliases by physical USB path.
+#
+# Expected Raspberry Pi 4 USB layout:
+#   usb 1-1.1     -> FTDI / Dynamixel
+#   usb 1-1.2.1   -> CH341 Arduino 1
+#   usb 1-1.2.3   -> CH341 Arduino 2
+#   usb 1-1.2.4   -> CH341 Arduino 3
+#
+# These rules create /dev/jonas_usb0..3 and grant access to the dialout group.
+
+SUBSYSTEM=="tty", KERNEL=="ttyUSB*", KERNELS=="1-1.1", ATTRS{idVendor}=="0403", SYMLINK+="jonas_usb0", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="tty", KERNEL=="ttyUSB*", KERNELS=="1-1.2.1", ATTRS{idVendor}=="1a86", SYMLINK+="jonas_usb1", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="tty", KERNEL=="ttyUSB*", KERNELS=="1-1.2.3", ATTRS{idVendor}=="1a86", SYMLINK+="jonas_usb2", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="tty", KERNEL=="ttyUSB*", KERNELS=="1-1.2.4", ATTRS{idVendor}=="1a86", SYMLINK+="jonas_usb3", GROUP="dialout", MODE="0660"

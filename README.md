@@ -1,85 +1,293 @@
-# Jonas the Robot 🤖
-Jonas is a hybrid robot developed by the Mechatronics and Robotics Laboratory at UTEC for research and display purposes. Inside this repo, we are sharing the files necessary to enable the main features of Jonas, which include: 
+# Jonas ROS 2
 
-- It can move freely in a 2D terrain due to its three-wheel omnidirectional configuration. 
-- It can follow arm movement sequences to salute, give hugs, and dance, among other actions.
-- It can be controlled remotely from a PC, as currently, it's not autonomous.  
+This repository contains the ROS 2 Humble software stack for Jonas, a robotics
+project of UTEC - Universidad de Ingenieria y Tecnologia, Lima, Peru.
 
+Repository editor and maintainer contact: `mpuchuri@utec.edu.pe`.
 
-## Environment and Dependencies
+## Overview
 
-Jonas has a Raspberry Pi 3 B+ with Ubuntu MATE 18.04 as a main computer, with ROS Melodic installed. It depends on the [Dynamixel SDK](https://github.com/ROBOTIS-GIT/DynamixelSDK) and PyQt5. However, both dependencies can also be used in a newer version of ROS. Also, to control Jonas remotely, it's important to have a computer with Ubuntu 18.04 or 20.04 with [ROS Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) or [ROS Noetic](http://wiki.ros.org/melodic/Installation/Ubuntu) installed. 
+Jonas is operated through a distributed ROS 2 setup:
 
+- A remote PC runs the operator interface and the arm sequence planner.
+- A Raspberry Pi 4 with 8 GB of RAM runs the robot-side nodes for the mobile
+  base, face display, and Dynamixel servos.
 
-## Setting Up Jonas
+The workspace is intended to be placed directly at:
 
-Before working with Jonas, it's important to set it up following the next sections related to power, network settings and bring up launch files. 
+```text
+~/jonas_ws/src/jonas
+```
 
-### Power
+Keep only this repository inside `~/jonas_ws/src` for Jonas.
 
-Jonas has two power supplies:
-- A 5V USB power bank connected to the RPI. 
-- A 11.1V LiPO battery connected to the actuators.
+## Packages
 
-Both batteries need to be fully charged and connected before using Jonas. Also, it has two switches on the base for controlling the supply of both arms (left switch) and mobile base motors (right switch). We recommend to turn the switches moments before running the launch files to save energy. 
+- `jonas_interfaces`: custom service and action definitions.
+- `jonas`: arm motion, Dynamixel control, launch files, and sequence planning.
+- `wheels_motor`: mobile base control and wheel serial communication.
+- `interface_rpi`: robot-side face display interface.
+- `interface_pc`: remote PC PyQt control interface.
 
+Additional files:
 
-### Network
+- `NODE_ARCHITECTURE.md`: node, topic, service, and hardware architecture.
+- `docs/jonas_node_architecture.svg`: architecture diagram.
+- `rpi4_jonas.sh`: Raspberry Pi setup helper for ROS 2 Humble, runtime
+  packages, serial permissions, and udev rules.
+- `udev/99-jonas-serial.rules`: stable serial aliases for Jonas hardware.
 
-The ROS TCP/IP communication settings are easy to set up; however, they should be done with attention to detail as any misplaced number could throw undesired errors. Here are the necessary steps: 
+## PC Control Interface
 
-1. Retrieve the IPs corresponding to Jonas and the remote PC by using the `ifconfig` command line. For convenience purposes, from now on we are using the substitutes `<JONAS_IP>` and `<REMOTE_PC_IP>`. 
-> ⚠️ NAT addresses or similar cannot be used in ROS, as it requires the network to have bi-directional connectivity and a name that every machine can resolve. In other words, Jonas can only be used if it is connected to mobile hotspots, local routers, or similar.  
+The `interface_pc` package provides a PyQt GUI for remote operation. It starts a
+ROS 2 node named `pyqt_gui` and publishes commands to three topics:
 
-3. Open the `.bashrc` script with the text editor of your preference in the default terminal directory and add the following text lines on the bottom:
+![Jonas PC control interface](docs/interface_pc_gui.png)
 
-Add this line to `.bashrc` inside Remote PC. \
-`export ROS_MASTER_URI=http:/<REMOTE_PC_IP>:11311
-export ROS_HOSTNAME=<REMOTE_PC_IP>`
+- `mov_coms_topic` (`std_msgs/Int16MultiArray`): mobile base movement command
+  and speed percentage.
+- `face_coms_topic` (`std_msgs/String`): face expression command for the
+  Raspberry Pi display.
+- `servos_coms_topic` (`std_msgs/String`): gesture or sequence command for the
+  arm sequence planner.
 
-Add this line to `bashrc` inside Jonas.\
-`export ROS_MASTER_URI=http:/<REMOTE_PC>:11311
-export ROS_HOSTNAME=<JONASC_IP>`
+The movement buttons send direction codes for `UP`, `DOWN`, `LEFT`, `RIGHT`,
+diagonal motion, and rotation. The horizontal slider sets the movement speed
+from `0` to `99`, and the `STOP` button sends a zero-speed command.
 
+The sequence buttons publish both a face expression and an arm gesture:
 
-### Bring Up
-Jonas needs to be booted up using the following command lines:
+| Button | Face expression | Arm command |
+| --- | --- | --- |
+| `Secuencia 1` | `blink` | `Salute` |
+| `Secuencia 2` | `fire` | `Curl` |
+| `Secuencia 3` | `heart` | `Hug` |
+| `Secuencia 4` | `music` | `Dance` |
+| `Secuencia 5` | `smile` | `Serve` |
 
-Run this command in Remote PC.\
-`roslaunch jonas remote_pc.launch`
+The PC interface is normally launched with:
 
-Run this command in Jonas.\
-`roslaunch jonas jonas.launch`
+```bash
+ros2 launch jonas remote_pc.launch.py
+```
 
-> ⚠️ *SSH cannot be used due to the graphic interface library. We are currently finding a way to bring up all files of Jonas by powering it on.*
+It can also be run directly after building and sourcing the workspace:
 
-### Remote Control
+```bash
+ros2 run interface_pc interface_pc
+```
 
-To control the movement of Jonas, the team developed a UI with all the basic functionalities of Jonas. Here is a screenshot of it.
+## Robot Computer Setup
 
-<img src="https://github.com/dumdumrobots/jonas/assets/77807539/c73df4a1-feee-4b7c-9d32-911ad46a58f6" width="500" height="350"> <br />
+The Jonas robot uses a Raspberry Pi 4 with 8 GB of RAM as its onboard computer.
+The base operating system installed on the Raspberry Pi is Ubuntu Server 22.04
+LTS. A lightweight graphical desktop was then added with Ubuntu MATE so the
+robot-side display tools can run when needed.
 
-The arms sequences are controlled by the buttons on the right side. There are a total of five sequences: 
+Install Ubuntu MATE on top of Ubuntu Server with:
 
-1. Salute 👋
-2. Curl 💪
-3. Hug 💞
-4. Dance 🎶
-5. Serve 🆘
- 
-On the other hand, the mobile base is controlled by the remaining buttons. By pressing them, Jonas will follow that direction. The velocity of Jonas is controlled by the top-left slider, and its numeric value is displayed next to the `START` button. 
+```bash
+sudo apt update
+sudo apt install -y ubuntu-mate-desktop
+sudo reboot
+```
 
-> We recommend keeping Jonas inside the 10-20u velocity range, as greater velocities can cause him to tumble on braking. 
+During installation, Ubuntu may ask for a display manager. The default option is
+usually acceptable. After rebooting, the Raspberry Pi can still be used over SSH,
+but it also has a graphical desktop available for local display work.
 
-> The control interface is a work in progress!
+The same desktop can be installed together with the Jonas setup script by using
+the optional `--with-mate` flag.
 
-*Working on this README!*
+## Requirements
 
-Our friendly robot could not be possible without the work and support of the following:
-- Raúl Escandon (elmer.escandon@utec.edu.pe)
-- Ricardo Terreros (ricardo.terreros@utec.edu.pe)
-- Sergio Morales (sergio.morales@utec.edu.pe)
-- Diego Palma (diego.palma@utec.edu.pe)
-- Del Piero Flores (delpiero.flores@utec.edu.pe)
-- Claudia Castañeda (claudia.castaneda@utec.edu.pe)
-- Joaquín Cornejo (joaquin.cornejo@utec.edu.pe)
+These instructions target Ubuntu 22.04 with ROS 2 Humble.
+
+On the Raspberry Pi, the recommended setup path is the consolidated helper
+script:
+
+```bash
+cd ~/jonas_ws
+bash src/jonas/rpi4_jonas.sh
+```
+
+This installs ROS 2 Humble base, the Python and ROS packages needed by Jonas,
+adds the user to the `dialout` group, copies the udev rules from
+`src/jonas/udev/99-jonas-serial.rules`, reloads udev, and prepares the shell
+environment.
+
+To also install Ubuntu MATE:
+
+```bash
+bash src/jonas/rpi4_jonas.sh --with-mate
+```
+
+The manual commands below are useful when setting up a PC or when installing
+dependencies step by step.
+
+Load ROS 2 in the current terminal:
+
+```bash
+source /opt/ros/humble/setup.bash
+export ROS_DISTRO=humble
+```
+
+Install base tools:
+
+```bash
+sudo apt update
+sudo apt install -y \
+  python3-colcon-common-extensions \
+  python3-rosdep \
+  python3-setuptools
+```
+
+Initialize `rosdep` if needed:
+
+```bash
+sudo rosdep init
+rosdep update
+```
+
+If `sudo rosdep init` reports that it was already initialized, run only:
+
+```bash
+rosdep update
+```
+
+Install ROS 2 and Python dependencies used by the packages:
+
+```bash
+sudo apt update
+sudo apt install -y \
+  python3-numpy \
+  python3-serial \
+  python3-pyqt5 \
+  python3-tk \
+  ros-${ROS_DISTRO}-ament-cmake \
+  ros-${ROS_DISTRO}-rosidl-default-generators \
+  ros-${ROS_DISTRO}-rosidl-default-runtime \
+  ros-${ROS_DISTRO}-action-msgs \
+  ros-${ROS_DISTRO}-builtin-interfaces \
+  ros-${ROS_DISTRO}-rclpy \
+  ros-${ROS_DISTRO}-std-msgs \
+  ros-${ROS_DISTRO}-launch \
+  ros-${ROS_DISTRO}-launch-ros \
+  ros-${ROS_DISTRO}-ament-index-python \
+  ros-${ROS_DISTRO}-dynamixel-sdk
+```
+
+From the workspace root, install dependencies declared by the local packages:
+
+```bash
+cd ~/jonas_ws
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+## Build
+
+For a normal PC or laptop build:
+
+```bash
+cd ~/jonas_ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+source install/setup.bash
+```
+
+If package locations were recently moved, clean generated directories first:
+
+```bash
+cd ~/jonas_ws
+rm -rf build install log
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+source install/setup.bash
+```
+
+## Raspberry Pi Build
+
+On a Raspberry Pi 4, use a sequential build to reduce memory pressure:
+
+```bash
+cd ~/jonas_ws
+source /opt/ros/humble/setup.bash
+export MAKEFLAGS="-j1"
+COLCON_RPI_ARGS="--symlink-install --merge-install --executor sequential --parallel-workers 1"
+
+colcon build $COLCON_RPI_ARGS --cmake-args -DBUILD_TESTING=OFF
+source install/setup.bash
+```
+
+Recommended package-by-package order:
+
+```bash
+colcon build $COLCON_RPI_ARGS --packages-select jonas_interfaces --cmake-args -DBUILD_TESTING=OFF
+source install/setup.bash
+
+colcon build $COLCON_RPI_ARGS --packages-select wheels_motor --cmake-args -DBUILD_TESTING=OFF
+source install/setup.bash
+
+colcon build $COLCON_RPI_ARGS --packages-select interface_rpi --cmake-args -DBUILD_TESTING=OFF
+source install/setup.bash
+
+colcon build $COLCON_RPI_ARGS --packages-select jonas --cmake-args -DBUILD_TESTING=OFF
+source install/setup.bash
+```
+
+The PC-only package `interface_pc` is not required on the robot if the Raspberry
+Pi only runs `jonas.launch.py`.
+
+## Launch
+
+Robot-side launch on the Raspberry Pi:
+
+```bash
+ros2 launch jonas jonas.launch.py
+```
+
+Remote PC launch:
+
+```bash
+ros2 launch jonas remote_pc.launch.py
+```
+
+For a distributed setup, both machines should share the same ROS 2 domain:
+
+```bash
+export ROS_DOMAIN_ID=0
+export ROS_LOCALHOST_ONLY=0
+```
+
+Source ROS 2 and the workspace on each machine before launching:
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/jonas_ws/install/setup.bash
+```
+
+## Serial Ports
+
+The current code uses stable udev aliases:
+
+| Hardware | Alias |
+| --- | --- |
+| Dynamixel / FTDI | `/dev/jonas_usb0` |
+| Wheel Arduino 1 | `/dev/jonas_usb1` |
+| Wheel Arduino 2 | `/dev/jonas_usb2` |
+| Wheel Arduino 3 | `/dev/jonas_usb3` |
+
+The aliases are created by `udev/99-jonas-serial.rules`, which is copied by the
+setup script to `/etc/udev/rules.d/99-jonas-serial.rules`. The same rules assign
+the devices to the `dialout` group with `0660` permissions.
+
+To manually install the rule:
+
+```bash
+sudo install -m 0644 src/jonas/udev/99-jonas-serial.rules /etc/udev/rules.d/99-jonas-serial.rules
+sudo udevadm control --reload-rules
+sudo udevadm trigger --subsystem-match=tty
+sudo usermod -aG dialout $USER
+```
+
+Log out and back in, or reboot, so the group change takes effect.

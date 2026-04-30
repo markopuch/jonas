@@ -1,0 +1,5 @@
+bool sequence_active
+---
+bool sequence_finished
+---
+builtin_interfaces/Duration time_elapsed
