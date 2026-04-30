@@ -31,10 +31,6 @@ setup(
     entry_points={
         'console_scripts': [
             'jonas_control = wheels_motor.jonas_control:main',
-            'jonas_wheels_interface = '
-            'wheels_motor.jonas_wheels_interface:main',
-            'jonas_pc_style_interface = '
-            'wheels_motor.jonas_pc_style_interface:main',
         ],
     },
 )
