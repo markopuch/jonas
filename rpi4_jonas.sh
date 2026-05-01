@@ -135,7 +135,15 @@ else
   echo "rosdep is already initialized."
 fi
 rosdep update
-rosdep install --from-paths src --ignore-src -r -y
+echo "Installing dependencies for Raspberry Pi robot-side packages only."
+echo "PC-only packages such as interface_pc and jonas_description are excluded here."
+ROBOT_PACKAGE_PATHS=(
+  src/jonas/jonas_interfaces
+  src/jonas/wheels_motor
+  src/jonas/interface_rpi
+  src/jonas/jonas
+)
+rosdep install --from-paths "${ROBOT_PACKAGE_PATHS[@]}" --ignore-src -r -y
 
 echo
 echo "== Serial permissions and udev =="
@@ -183,7 +191,9 @@ Important next steps:
      source /opt/ros/${ROS_DISTRO}/setup.bash
      export MAKEFLAGS="-j1"
      colcon build --symlink-install --merge-install --executor sequential \\
-       --parallel-workers 1 --cmake-args -DBUILD_TESTING=OFF
+       --parallel-workers 1 --packages-select \\
+       jonas_interfaces wheels_motor interface_rpi jonas \\
+       --cmake-args -DBUILD_TESTING=OFF
      source install/setup.bash
 
 4. Run the robot:

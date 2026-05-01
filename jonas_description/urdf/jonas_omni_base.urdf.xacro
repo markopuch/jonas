@@ -1,0 +1,183 @@
+<?xml version="1.0"?>
+<robot name="jonas_omni_base" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Jonas robotics project, UTEC - Lima, Peru. -->
+
+  <!-- ========================= -->
+  <!-- CONFIGURABLE PARAMETERS   -->
+  <!-- ========================= -->
+
+  <!-- Circular base -->
+  <xacro:property name="base_radius" value="0.22"/>          <!-- m: base radius -->
+  <xacro:property name="base_height" value="0.08"/>          <!-- m: base height -->
+  <xacro:property name="base_mass" value="4.0"/>             <!-- kg -->
+
+  <!-- Omni wheels -->
+  <xacro:property name="wheel_radius" value="0.05"/>         <!-- m: wheel radius -->
+  <xacro:property name="wheel_width" value="0.025"/>         <!-- m: wheel thickness/width -->
+  <xacro:property name="wheel_mass" value="0.25"/>           <!-- kg -->
+
+  <!-- Triangular geometry -->
+  <xacro:property name="wheel_separation_radius" value="0.17"/> 
+  <!-- Distance from the base center to each wheel center. -->
+
+  <xacro:property name="wheel_angle_1" value="0.0"/>         <!-- rad -->
+  <xacro:property name="wheel_angle_2" value="2.094395102"/> <!-- 120 degrees -->
+  <xacro:property name="wheel_angle_3" value="4.188790205"/> <!-- 240 degrees -->
+
+  <!-- Wheel center height relative to the base_link center. -->
+  <xacro:property name="wheel_z" value="-0.025"/>
+
+  <!-- Visualization -->
+  <xacro:property name="base_color" value="0.5 0.5 0.5 1.0"/>
+  <xacro:property name="wheel_color" value="0.02 0.02 0.02 1.0"/>
+
+  <!-- ========================= -->
+  <!-- MATERIALS                 -->
+  <!-- ========================= -->
+
+  <material name="base_gray">
+    <color rgba="${base_color}"/>
+  </material>
+
+  <material name="wheel_black">
+    <color rgba="${wheel_color}"/>
+  </material>
+
+  <!-- ========================= -->
+  <!-- SIMPLE INERTIA MODELS     -->
+  <!-- ========================= -->
+
+  <!-- Approximate vertical cylinder inertia for the base. -->
+  <xacro:macro name="cylinder_inertia_z" params="mass radius length">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${(1.0/12.0) * mass * (3.0 * radius * radius + length * length)}"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="${(1.0/12.0) * mass * (3.0 * radius * radius + length * length)}"
+        iyz="0.0"
+        izz="${0.5 * mass * radius * radius}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Approximate cylindrical wheel inertia. -->
+  <xacro:macro name="wheel_inertia" params="mass radius width">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${0.5 * mass * radius * radius}"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="${(1.0/12.0) * mass * (3.0 * radius * radius + width * width)}"
+        iyz="0.0"
+        izz="${(1.0/12.0) * mass * (3.0 * radius * radius + width * width)}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- ========================= -->
+  <!-- MAIN BASE                 -->
+  <!-- ========================= -->
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="${base_radius}" length="${base_height}"/>
+      </geometry>
+      <material name="base_gray"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="${base_radius}" length="${base_height}"/>
+      </geometry>
+    </collision>
+
+    <xacro:cylinder_inertia_z
+      mass="${base_mass}"
+      radius="${base_radius}"
+      length="${base_height}"/>
+  </link>
+
+  <!-- Auxiliary link for odometry. -->
+  <link name="odom"/>
+
+  <joint name="odom_to_base_link" type="fixed">
+    <parent link="odom"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ========================= -->
+  <!-- OMNI WHEEL MACRO          -->
+  <!-- ========================= -->
+
+  <!--
+    angle:
+      Wheel angular position around the base.
+
+    wheel_x = R*cos(angle)
+    wheel_y = R*sin(angle)
+
+    The wheel is placed tangent to the base circle.
+    The joint axis is oriented so the wheel rotates correctly.
+  -->
+
+  <xacro:macro name="omni_wheel" params="name angle">
+
+    <link name="${name}_wheel_link">
+      <visual>
+        <!-- Rotated cylinder so the visual appears as a vertical wheel. -->
+        <origin xyz="0 0 0" rpy="0 1.57079632679 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <material name="wheel_black"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 1.57079632679 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+
+      <xacro:wheel_inertia
+        mass="${wheel_mass}"
+        radius="${wheel_radius}"
+        width="${wheel_width}"/>
+    </link>
+
+    <joint name="${name}_wheel_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="${name}_wheel_link"/>
+
+      <!-- Wheel position in the triangular base configuration. -->
+      <origin
+        xyz="${wheel_separation_radius * cos(angle)}
+             ${wheel_separation_radius * sin(angle)}
+             ${wheel_z}"
+        rpy="0 0 ${angle}"/>
+
+      <!-- Wheel rotation axis. -->
+      <axis xyz="1 0 0"/>
+
+      <dynamics damping="0.01" friction="0.0"/>
+    </joint>
+
+  </xacro:macro>
+
+  <!-- ========================= -->
+  <!-- THREE OMNI WHEELS         -->
+  <!-- ========================= -->
+
+  <xacro:omni_wheel name="front" angle="${wheel_angle_1}"/>
+  <xacro:omni_wheel name="left_rear" angle="${wheel_angle_2}"/>
+  <xacro:omni_wheel name="right_rear" angle="${wheel_angle_3}"/>
+
+</robot>

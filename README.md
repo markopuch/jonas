@@ -25,6 +25,8 @@ Keep only this repository inside `~/jonas_ws/src` for Jonas.
 
 - `jonas_interfaces`: custom service and action definitions.
 - `jonas`: arm motion, Dynamixel control, launch files, and sequence planning.
+- `jonas_description`: PC-side URDF/Xacro robot description and RViz
+  visualization.
 - `wheels_motor`: mobile base control and wheel serial communication.
 - `interface_rpi`: robot-side face display interface.
 - `interface_pc`: remote PC PyQt control interface.
@@ -77,6 +79,29 @@ It can also be run directly after building and sourcing the workspace:
 ros2 run interface_pc interface_pc
 ```
 
+## Robot Description and RViz
+
+The `jonas_description` package contains the current URDF/Xacro model of the
+Jonas omni base:
+
+```text
+src/jonas/jonas_description/urdf/jonas_omni_base.urdf.xacro
+```
+
+This is a PC-side visualization package. It should be built and launched on the
+operator PC or development laptop, not on the Raspberry Pi robot runtime. It
+launches `robot_state_publisher`, `joint_state_publisher_gui`, and RViz so the
+model can be inspected without running the physical robot:
+
+```bash
+ros2 launch jonas_description display.launch.py
+```
+
+The GUI sliders publish joint states for the continuous wheel joints
+`front_wheel_joint`, `left_rear_wheel_joint`, and `right_rear_wheel_joint`.
+These sliders let you rotate the visible joints in RViz while the URDF is being
+validated.
+
 ## Robot Computer Setup
 
 The Jonas robot uses a Raspberry Pi 4 with 8 GB of RAM as its onboard computer.
@@ -114,7 +139,9 @@ bash src/jonas/rpi4_jonas.sh
 This installs ROS 2 Humble base, the Python and ROS packages needed by Jonas,
 adds the user to the `dialout` group, copies the udev rules from
 `src/jonas/udev/99-jonas-serial.rules`, reloads udev, and prepares the shell
-environment.
+environment. The script intentionally excludes PC-only packages such as
+`interface_pc` and `jonas_description`; RViz visualization dependencies belong
+on the PC.
 
 To also install Ubuntu MATE:
 
@@ -155,7 +182,7 @@ If `sudo rosdep init` reports that it was already initialized, run only:
 rosdep update
 ```
 
-Install ROS 2 and Python dependencies used by the packages:
+Install ROS 2 and Python dependencies used by all packages on a PC or laptop:
 
 ```bash
 sudo apt update
@@ -173,6 +200,10 @@ sudo apt install -y \
   ros-${ROS_DISTRO}-std-msgs \
   ros-${ROS_DISTRO}-launch \
   ros-${ROS_DISTRO}-launch-ros \
+  ros-${ROS_DISTRO}-robot-state-publisher \
+  ros-${ROS_DISTRO}-joint-state-publisher-gui \
+  ros-${ROS_DISTRO}-rviz2 \
+  ros-${ROS_DISTRO}-xacro \
   ros-${ROS_DISTRO}-ament-index-python \
   ros-${ROS_DISTRO}-dynamixel-sdk
 ```
@@ -182,6 +213,18 @@ From the workspace root, install dependencies declared by the local packages:
 ```bash
 cd ~/jonas_ws
 rosdep install --from-paths src --ignore-src -r -y
+```
+
+On the Raspberry Pi, install only robot-side package dependencies:
+
+```bash
+cd ~/jonas_ws
+rosdep install --from-paths \
+  src/jonas/jonas_interfaces \
+  src/jonas/wheels_motor \
+  src/jonas/interface_rpi \
+  src/jonas/jonas \
+  --ignore-src -r -y
 ```
 
 ## Build
@@ -207,7 +250,8 @@ source install/setup.bash
 
 ## Raspberry Pi Build
 
-On a Raspberry Pi 4, use a sequential build to reduce memory pressure:
+On a Raspberry Pi 4, build only robot-side packages and use a sequential build
+to reduce memory pressure:
 
 ```bash
 cd ~/jonas_ws
@@ -215,7 +259,9 @@ source /opt/ros/humble/setup.bash
 export MAKEFLAGS="-j1"
 COLCON_RPI_ARGS="--symlink-install --merge-install --executor sequential --parallel-workers 1"
 
-colcon build $COLCON_RPI_ARGS --cmake-args -DBUILD_TESTING=OFF
+colcon build $COLCON_RPI_ARGS \
+  --packages-select jonas_interfaces wheels_motor interface_rpi jonas \
+  --cmake-args -DBUILD_TESTING=OFF
 source install/setup.bash
 ```
 
@@ -235,8 +281,10 @@ colcon build $COLCON_RPI_ARGS --packages-select jonas --cmake-args -DBUILD_TESTI
 source install/setup.bash
 ```
 
-The PC-only package `interface_pc` is not required on the robot if the Raspberry
-Pi only runs `jonas.launch.py`.
+The PC-only package `interface_pc` and the visualization package
+`jonas_description` are not required on the robot if the Raspberry Pi only runs
+`jonas.launch.py`. Build and launch `jonas_description` only on the machine
+where RViz will be used.
 
 ## Launch
 
@@ -250,6 +298,12 @@ Remote PC launch:
 
 ```bash
 ros2 launch jonas remote_pc.launch.py
+```
+
+Robot model visualization in RViz on the PC:
+
+```bash
+ros2 launch jonas_description display.launch.py
 ```
 
 For a distributed setup, both machines should share the same ROS 2 domain:

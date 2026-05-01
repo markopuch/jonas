@@ -14,6 +14,9 @@ The main runtime architecture is split across two machines:
 
 - PC: remote control interface and sequence planner.
 - Raspberry Pi: robot hardware control, face display, wheels, and servos.
+- Visualization PC: optional URDF/Xacro display in RViz for checking the robot
+  model and moving visual joints without hardware. The `jonas_description`
+  package belongs to the PC/development side, not to the Raspberry Pi runtime.
 
 Main Raspberry Pi launch:
 
@@ -25,6 +28,12 @@ Main PC launch:
 
 ```bash
 ros2 launch jonas remote_pc.launch.py
+```
+
+URDF/RViz visualization launch:
+
+```bash
+ros2 launch jonas_description display.launch.py
 ```
 
 General diagram:
@@ -230,6 +239,23 @@ The file `src/jonas/jonas/launch/new.launch.py` launches:
 That launch is useful for local GUI + wheels tests on one machine. It does not
 represent the full distributed PC/RPi architecture.
 
+## Visualization Package
+
+The `jonas_description` package stores the current robot description at:
+
+```text
+src/jonas/jonas_description/urdf/jonas_omni_base.urdf.xacro
+```
+
+Its `display.launch.py` file starts:
+
+- `robot_state_publisher`: publishes the TF tree from the URDF.
+- `joint_state_publisher_gui`: provides sliders for continuous wheel joints.
+- `rviz2`: opens the model with the repository RViz configuration.
+
+This launch is intended for URDF validation and RViz visualization only. It runs
+on the PC/development laptop and does not command the physical robot.
+
 ## Useful Commands
 
 Both machines should use the same ROS 2 domain:
@@ -251,6 +277,12 @@ On the PC:
 
 ```bash
 ros2 launch jonas remote_pc.launch.py
+```
+
+For URDF/RViz visualization on the PC:
+
+```bash
+ros2 launch jonas_description display.launch.py
 ```
 
 To inspect the communication graph while nodes are running:
