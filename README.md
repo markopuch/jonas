@@ -9,9 +9,9 @@ Repository editor and maintainer contact: `mpuchuri@utec.edu.pe`.
 
 Jonas is operated through a distributed ROS 2 setup:
 
-- A remote PC runs the operator interface and the arm sequence planner.
+- A remote PC runs the operator interface.
 - A Raspberry Pi 4 with 8 GB of RAM runs the robot-side nodes for the mobile
-  base, face display, and Dynamixel servos.
+  base, face display, Dynamixel servos, and arm sequence planner.
 
 The workspace is intended to be placed directly at:
 
@@ -29,7 +29,8 @@ Keep only this repository inside `~/jonas_ws/src` for Jonas.
   visualization.
 - `wheels_motor`: mobile base control and wheel serial communication.
 - `interface_rpi`: robot-side face display interface.
-- `interface_pc`: remote PC PyQt control interface.
+- `interface_pc`: remote PC PyQt control interface adapted to the legacy Jonas
+  topics.
 
 Additional files:
 
@@ -41,10 +42,9 @@ Additional files:
 
 ## PC Control Interface
 
-The `interface_pc` package provides a PyQt GUI for remote operation. It starts a
-ROS 2 node named `pyqt_gui` and publishes commands to three topics:
-
-![Jonas PC control interface](docs/interface_pc_gui.png)
+The `interface_pc` package provides the newer PyQt operator GUI adapted to the
+legacy Jonas topic architecture. It starts a ROS 2 node named `pyqt_gui`, does
+not depend on `jonas_interfaces_v2`, and publishes commands to three topics:
 
 - `mov_coms_topic` (`std_msgs/Int16MultiArray`): mobile base movement command
   and speed percentage.
@@ -53,24 +53,49 @@ ROS 2 node named `pyqt_gui` and publishes commands to three topics:
 - `servos_coms_topic` (`std_msgs/String`): gesture or sequence command for the
   arm sequence planner.
 
-The movement buttons send direction codes for `UP`, `DOWN`, `LEFT`, `RIGHT`,
-diagonal motion, and rotation. The horizontal slider sets the movement speed
-from `0` to `99`, and the `STOP` button sends a zero-speed command.
+It also subscribes to `motors_status` (`std_msgs/Bool`) to show whether the
+Dynamixel sequence controller is still moving.
+
+The analog pad maps X/Y input to the legacy movement codes used by
+`wheels_motor`. The horizontal slider sets the maximum speed from `0` to `99`;
+the analog displacement scales the sent percentage below that limit. The `STOP`
+button sends `[1, 0]`.
+
+| Code | Direction |
+| --- | --- |
+| `1` | `UP` |
+| `2` | `DOWN` |
+| `3` | `LEFT` |
+| `4` | `RIGHT` |
+| `5` | `UP-RIGHT` |
+| `6` | `DOWN-RIGHT` |
+| `7` | `DOWN-LEFT` |
+| `8` | `UP-LEFT` |
+| `9` | `ROT-LEFT` |
+| `10` | `ROT-RIGHT` |
 
 The sequence buttons publish both a face expression and an arm gesture:
 
 | Button | Face expression | Arm command |
 | --- | --- | --- |
-| `Secuencia 1` | `blink` | `Salute` |
-| `Secuencia 2` | `fire` | `Curl` |
-| `Secuencia 3` | `heart` | `Hug` |
-| `Secuencia 4` | `music` | `Dance` |
-| `Secuencia 5` | `smile` | `Serve` |
+| `Salute` | `blink` | `Salute` |
+| `Curl` | `fire` | `Curl` |
+| `Hug` | `heart` | `Hug` |
+| `Dance` | `music` | `Dance` |
+| `Serve` | `smile` | `Serve` |
+| `Walking` | `blink` | `Walking` |
+| `Rest` | `blink` | `Rest` |
 
 The PC interface is normally launched with:
 
 ```bash
 ros2 launch jonas remote_pc.launch.py
+```
+
+The interface-only launch is also available:
+
+```bash
+ros2 launch jonas operator_pc.launch.py
 ```
 
 It can also be run directly after building and sourcing the workspace:
@@ -283,8 +308,9 @@ source install/setup.bash
 
 The PC-only package `interface_pc` and the visualization package
 `jonas_description` are not required on the robot if the Raspberry Pi only runs
-`jonas.launch.py`. Build and launch `jonas_description` only on the machine
-where RViz will be used.
+`jonas.launch.py`. The `jonas` package is still built on the Raspberry Pi
+because it now runs both `motor_movement` and `sequence_planner` there. Build
+and launch `jonas_description` only on the machine where RViz will be used.
 
 ## Launch
 
@@ -294,10 +320,22 @@ Robot-side launch on the Raspberry Pi:
 ros2 launch jonas jonas.launch.py
 ```
 
+This starts `motor_movement`, `wheels_motor`, `interface_rpi`, and
+`sequence_planner`. Keeping `sequence_planner` on the Raspberry Pi keeps
+`joint_value`, `motors_status`, and `sequence_service` local to the robot; only
+high-level GUI topics cross the network.
+
 Remote PC launch:
 
 ```bash
 ros2 launch jonas remote_pc.launch.py
+```
+
+This starts only the `interface_pc` GUI. For the same GUI with a more explicit
+name:
+
+```bash
+ros2 launch jonas operator_pc.launch.py
 ```
 
 Robot model visualization in RViz on the PC:

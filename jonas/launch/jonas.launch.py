@@ -17,6 +17,12 @@ def generate_launch_description():
             output='screen',
         ),
         Node(
+            package='jonas',
+            executable='sequence_planner',
+            name='sequence_planner',
+            output='screen',
+        ),
+        Node(
             package='interface_rpi',
             executable='interface_rpi',
             name='interface_rpi',
