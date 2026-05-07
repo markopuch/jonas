@@ -46,6 +46,8 @@ The `interface_pc` package provides the newer PyQt operator GUI adapted to the
 legacy Jonas topic architecture. It starts a ROS 2 node named `pyqt_gui`, does
 not depend on `jonas_interfaces_v2`, and publishes commands to three topics:
 
+![Jonas PC control interface](docs/interface_pc_gui.png)
+
 - `mov_coms_topic` (`std_msgs/Int16MultiArray`): mobile base movement command
   and speed percentage.
 - `face_coms_topic` (`std_msgs/String`): face expression command for the
@@ -90,12 +92,6 @@ The PC interface is normally launched with:
 
 ```bash
 ros2 launch jonas remote_pc.launch.py
-```
-
-The interface-only launch is also available:
-
-```bash
-ros2 launch jonas operator_pc.launch.py
 ```
 
 It can also be run directly after building and sourcing the workspace:
@@ -383,3 +379,9 @@ sudo usermod -aG dialout $USER
 ```
 
 Log out and back in, or reboot, so the group change takes effect.
+
+## Repository Origin
+
+This repository is an updated and improved version of the repository from which
+it was forked: <https://github.com/dumdumrobots/jonas>, by Joaquin Cornejo,
+master's student at TUM.
