@@ -25,8 +25,6 @@ Keep only this repository inside `~/jonas_ws/src` for Jonas.
 
 - `jonas_interfaces`: custom service and action definitions.
 - `jonas`: arm motion, Dynamixel control, launch files, and sequence planning.
-- `jonas_description`: PC-side URDF/Xacro robot description and RViz
-  visualization.
 - `wheels_motor`: mobile base control and wheel serial communication.
 - `interface_rpi`: robot-side face display interface.
 - `interface_pc`: remote PC PyQt control interface adapted to the legacy Jonas
@@ -56,7 +54,7 @@ not depend on `jonas_interfaces_v2`, and publishes commands to three topics:
   arm sequence planner.
 
 It also subscribes to `motors_status` (`std_msgs/Bool`) to show whether the
-Dynamixel sequence controller is still moving.
+Dynamixel controller is still moving.
 
 The analog pad maps X/Y input to the legacy movement codes used by
 `wheels_motor`. The horizontal slider sets the maximum speed from `0` to `99`;
@@ -100,29 +98,6 @@ It can also be run directly after building and sourcing the workspace:
 ros2 run interface_pc interface_pc
 ```
 
-## Robot Description and RViz
-
-The `jonas_description` package contains the current URDF/Xacro model of the
-Jonas omni base:
-
-```text
-src/jonas/jonas_description/urdf/jonas_omni_base.urdf.xacro
-```
-
-This is a PC-side visualization package. It should be built and launched on the
-operator PC or development laptop, not on the Raspberry Pi robot runtime. It
-launches `robot_state_publisher`, `joint_state_publisher_gui`, and RViz so the
-model can be inspected without running the physical robot:
-
-```bash
-ros2 launch jonas_description display.launch.py
-```
-
-The GUI sliders publish joint states for the continuous wheel joints
-`front_wheel_joint`, `left_rear_wheel_joint`, and `right_rear_wheel_joint`.
-These sliders let you rotate the visible joints in RViz while the URDF is being
-validated.
-
 ## Robot Computer Setup
 
 The Jonas robot uses a Raspberry Pi 4 with 8 GB of RAM as its onboard computer.
@@ -160,9 +135,8 @@ bash src/jonas/rpi4_jonas.sh
 This installs ROS 2 Humble base, the Python and ROS packages needed by Jonas,
 adds the user to the `dialout` group, copies the udev rules from
 `src/jonas/udev/99-jonas-serial.rules`, reloads udev, and prepares the shell
-environment. The script intentionally excludes PC-only packages such as
-`interface_pc` and `jonas_description`; RViz visualization dependencies belong
-on the PC.
+environment. The script installs dependencies for the robot-side packages used
+on the Raspberry Pi. The `interface_pc` GUI is launched from the operator PC.
 
 To also install Ubuntu MATE:
 
@@ -221,10 +195,6 @@ sudo apt install -y \
   ros-${ROS_DISTRO}-std-msgs \
   ros-${ROS_DISTRO}-launch \
   ros-${ROS_DISTRO}-launch-ros \
-  ros-${ROS_DISTRO}-robot-state-publisher \
-  ros-${ROS_DISTRO}-joint-state-publisher-gui \
-  ros-${ROS_DISTRO}-rviz2 \
-  ros-${ROS_DISTRO}-xacro \
   ros-${ROS_DISTRO}-ament-index-python \
   ros-${ROS_DISTRO}-dynamixel-sdk
 ```
@@ -302,11 +272,10 @@ colcon build $COLCON_RPI_ARGS --packages-select jonas --cmake-args -DBUILD_TESTI
 source install/setup.bash
 ```
 
-The PC-only package `interface_pc` and the visualization package
-`jonas_description` are not required on the robot if the Raspberry Pi only runs
-`jonas.launch.py`. The `jonas` package is still built on the Raspberry Pi
-because it now runs both `motor_movement` and `sequence_planner` there. Build
-and launch `jonas_description` only on the machine where RViz will be used.
+The PC-only package `interface_pc` is not required on the robot if the
+Raspberry Pi only runs `jonas.launch.py`. The `jonas` package is still built on
+the Raspberry Pi because it runs both `motor_movement` and `sequence_planner`
+there.
 
 ## Launch
 
@@ -327,18 +296,7 @@ Remote PC launch:
 ros2 launch jonas remote_pc.launch.py
 ```
 
-This starts only the `interface_pc` GUI. For the same GUI with a more explicit
-name:
-
-```bash
-ros2 launch jonas operator_pc.launch.py
-```
-
-Robot model visualization in RViz on the PC:
-
-```bash
-ros2 launch jonas_description display.launch.py
-```
+This starts only the `interface_pc` GUI.
 
 For a distributed setup, both machines should share the same ROS 2 domain:
 
