@@ -1,0 +1,287 @@
+:root {
+  color-scheme: light;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #eef1f5;
+  color: #1f2937;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #eef1f5;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app {
+  width: min(1180px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 14px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+h1 {
+  font-size: 28px;
+}
+
+h2 {
+  font-size: 18px;
+}
+
+h3 {
+  font-size: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 12px;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #d7dce5;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.base-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 14px;
+}
+
+.rotation-controls,
+.sequence-grid,
+.status-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.sequence-grid {
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+}
+
+.button {
+  min-height: 54px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #f8fafc;
+  color: #111827;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.button:active {
+  background: #dbeafe;
+  border-color: #2563eb;
+}
+
+.button.stop {
+  min-height: 70px;
+  background: #fee2e2;
+  border-color: #b91c1c;
+  color: #991b1b;
+  font-size: 20px;
+}
+
+.enable-row,
+.slider-row,
+.readouts {
+  display: grid;
+  gap: 8px;
+}
+
+.enable-row {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  font-weight: 700;
+}
+
+.enable-row input {
+  width: 30px;
+  height: 30px;
+}
+
+.slider-row {
+  grid-template-columns: 180px 1fr 120px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.slider-row input {
+  width: 100%;
+}
+
+.joystick-wrap {
+  display: grid;
+  grid-template-columns: minmax(240px, 330px) 1fr;
+  gap: 14px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.joystick {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #c8ced8;
+  touch-action: none;
+  overflow: hidden;
+}
+
+.joystick::before,
+.joystick::after {
+  content: "";
+  position: absolute;
+  background: #dde2ea;
+}
+
+.joystick::before {
+  left: 50%;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+}
+
+.joystick::after {
+  left: 10px;
+  right: 10px;
+  top: 50%;
+  height: 1px;
+}
+
+.joystick-label {
+  position: absolute;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4b5563;
+}
+
+.label-up {
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.label-down {
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.label-left {
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.label-right {
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 3px solid #1d4ed8;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 8px 18px rgb(37 99 235 / 24%);
+  z-index: 2;
+}
+
+.readouts div,
+.status-line {
+  min-height: 28px;
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  min-width: 120px;
+  border-radius: 7px;
+  padding: 4px 10px;
+  font-weight: 800;
+  border: 1px solid #475569;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.badge.ok {
+  border-color: #15803d;
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge.warn {
+  border-color: #92400e;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge.error {
+  border-color: #b91c1c;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-grid {
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+}
+
+.logs {
+  height: 180px;
+  overflow: auto;
+  background: #0f172a;
+  color: #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  font-family: "DejaVu Sans Mono", Consolas, monospace;
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .grid,
+  .base-grid,
+  .joystick-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .slider-row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -29,6 +29,8 @@ Keep only this repository inside `~/jonas_ws/src` for Jonas.
 - `interface_rpi`: robot-side face display interface.
 - `interface_pc`: remote PC PyQt control interface adapted to the legacy Jonas
   topics.
+- `interface_jonas_web`: tablet-oriented web interface for ROS 2 Humble using
+  rosbridge and a safety gateway.
 
 Additional files:
 
@@ -37,6 +39,23 @@ Additional files:
 - `rpi4_jonas.sh`: Raspberry Pi setup helper for ROS 2 Humble, runtime
   packages, serial permissions, and udev rules.
 - `udev/99-jonas-serial.rules`: stable serial aliases for Jonas hardware.
+
+## Interface Jonas Web
+
+The `interface_jonas_web` package provides a tablet web interface for Jonas
+using ROS 2 Humble and `rosbridge_server`. It serves the WebApp on port `8080`,
+connects the browser to rosbridge on port `9090`, and routes base movement
+through a safety gateway before publishing legacy Jonas movement commands to
+`mov_coms_topic`.
+
+Install the main Raspberry Pi dependency with:
+
+```bash
+sudo apt update
+sudo apt install ros-humble-rosbridge-server
+```
+
+See full instructions in `interface_jonas_web/README.md`.
 
 ## PC Control Interface
 

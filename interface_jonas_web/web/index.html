@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Jonas Web Control</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <h1>Jonas Web Control</h1>
+          <div>ROS 2 Humble via rosbridge</div>
+        </div>
+        <span id="rosStatus" class="badge error">DISCONNECTED</span>
+      </header>
+
+      <section class="grid">
+        <div class="panel">
+          <div class="topbar">
+            <h2>Base</h2>
+            <label class="enable-row">
+              <input id="enableMotion" type="checkbox">
+              <span>Habilitar movimiento</span>
+            </label>
+          </div>
+
+          <div class="base-grid">
+            <section>
+              <h3>Rotacion</h3>
+              <div class="rotation-controls">
+                <button id="rotateLeft" class="button">Rotar izq</button>
+                <button id="stopButton" class="button stop">STOP</button>
+                <button id="rotateRight" class="button">Rotar der</button>
+              </div>
+            </section>
+
+            <section>
+              <h3>Analogo lineal X/Y</h3>
+              <div class="joystick-wrap">
+                <div id="joystick" class="joystick" aria-label="Joystick X/Y">
+                  <span class="joystick-label label-up">+X</span>
+                  <span class="joystick-label label-down">-X</span>
+                  <span class="joystick-label label-left">+Y</span>
+                  <span class="joystick-label label-right">-Y</span>
+                  <div class="joystick-knob"></div>
+                </div>
+
+                <div class="readouts">
+                  <div id="inputLabel">Entrada: x=+0.00, y=+0.00</div>
+                  <div id="motionTopicLabel">mov_coms_topic: waiting</div>
+                  <div id="faceTopicLabel">face_coms_topic: waiting</div>
+                  <div id="servoTopicLabel">servos_coms_topic: waiting</div>
+                  <div id="motorsTopicLabel">motors_status: waiting</div>
+                  <div id="limitLabel">max legado=30%</div>
+                </div>
+              </div>
+
+              <div class="slider-row">
+                <div id="speedLabel">Limite de velocidad: 30%</div>
+                <input id="speedSlider" type="range" min="0" max="100" value="30">
+                <div>0% - 100%</div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Brazo</h2>
+          <div class="sequence-grid">
+            <button class="button" data-sequence="Salute">Salute</button>
+            <button class="button" data-sequence="Curl">Curl</button>
+            <button class="button" data-sequence="Hug">Hug</button>
+            <button class="button" data-sequence="Dance">Dance</button>
+            <button class="button" data-sequence="Serve">Serve</button>
+            <button class="button" data-sequence="Walking">Walking</button>
+            <button class="button" data-sequence="Rest">Rest</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Estado</h2>
+          <div class="status-grid">
+            <div>Base</div>
+            <span id="baseBadge" class="badge">WAIT</span>
+            <div>Cara</div>
+            <span id="faceBadge" class="badge">WAIT</span>
+            <div>Secuencia</div>
+            <span id="sequenceBadge" class="badge">WAIT</span>
+            <div>Dynamixel</div>
+            <span id="dynamixelBadge" class="badge">WAIT</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Logs</h2>
+          <div id="logPanel" class="logs"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/joystick.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

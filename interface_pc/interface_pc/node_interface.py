@@ -31,6 +31,8 @@ from std_msgs.msg import Bool, Int16MultiArray, String
 MAX_SPEED_PERCENT = 99
 STATUS_TIMEOUT = 2.0
 AXIS_DEADZONE = 0.12
+MOTION_UPDATE_INTERVAL = 0.20
+MOTION_KEEPALIVE_INTERVAL = 0.50
 STOP_COMMAND = 1
 
 MOVEMENT_LABELS = {
@@ -84,12 +86,13 @@ class JonasGuiNode(Node):
         payload = (command, speed_percent)
         now = time.monotonic()
 
-        if (
-            not force
-            and payload == self.last_motion_payload
-            and now - self.last_motion_sent < 0.08
-        ):
-            return
+        if not force and self.last_motion_sent:
+            elapsed = now - self.last_motion_sent
+            if payload == self.last_motion_payload:
+                if elapsed < MOTION_KEEPALIVE_INTERVAL:
+                    return
+            elif elapsed < MOTION_UPDATE_INTERVAL:
+                return
 
         msg = Int16MultiArray()
         msg.data = [command, speed_percent]
@@ -455,7 +458,7 @@ class JonasGui(QMainWindow):
         self.limit_label.setText(f'max legado={value}%')
         if hasattr(self, 'max_speed_label'):
             self.max_speed_label.setText(self.limit_label.text())
-        self.send_current_motion(force=True)
+        self.send_current_motion()
 
     def set_linear_axes(self, x_axis, y_axis):
         self.linear_x_axis = float(x_axis)
@@ -463,7 +466,7 @@ class JonasGui(QMainWindow):
         self.analog_label.setText(
             f'Entrada: x={self.linear_x_axis:+.2f}, y={self.linear_y_axis:+.2f}'
         )
-        self.send_current_motion(force=True)
+        self.send_current_motion(force=not self.motion_is_active())
 
     def set_rotation(self, angular_axis):
         self.angular_axis = float(angular_axis)
@@ -494,12 +497,17 @@ class JonasGui(QMainWindow):
     def motion_is_active(self):
         return self.motion_level() > AXIS_DEADZONE
 
+    def linear_motion_level(self):
+        return min(
+            1.0,
+            math.hypot(self.linear_x_axis, self.linear_y_axis),
+        )
+
     def motion_level(self):
         return min(
             1.0,
             max(
-                abs(self.linear_x_axis),
-                abs(self.linear_y_axis),
+                self.linear_motion_level(),
                 abs(self.angular_axis),
             ),
         )
@@ -509,26 +517,33 @@ class JonasGui(QMainWindow):
         y_axis = self.linear_y_axis
         angular_axis = self.angular_axis
 
-        if abs(angular_axis) >= max(abs(x_axis), abs(y_axis), AXIS_DEADZONE):
+        linear_level = self.linear_motion_level()
+        angular_level = abs(angular_axis)
+
+        if angular_level >= max(linear_level, AXIS_DEADZONE):
             return 9 if angular_axis > 0.0 else 10
 
-        x_active = abs(x_axis) > AXIS_DEADZONE
-        y_active = abs(y_axis) > AXIS_DEADZONE
+        if linear_level <= AXIS_DEADZONE:
+            return STOP_COMMAND
 
-        if x_active and y_active:
-            if x_axis > 0.0 and y_axis > 0.0:
-                return 8
-            if x_axis > 0.0 and y_axis < 0.0:
-                return 5
-            if x_axis < 0.0 and y_axis < 0.0:
-                return 6
+        angle = math.degrees(math.atan2(y_axis, x_axis))
+
+        if -22.5 <= angle < 22.5:
+            return 1
+        if 22.5 <= angle < 67.5:
+            return 8
+        if 67.5 <= angle < 112.5:
+            return 3
+        if 112.5 <= angle < 157.5:
             return 7
-
-        if x_active:
-            return 1 if x_axis > 0.0 else 2
-
-        if y_active:
-            return 3 if y_axis > 0.0 else 4
+        if angle >= 157.5 or angle < -157.5:
+            return 2
+        if -157.5 <= angle < -112.5:
+            return 6
+        if -112.5 <= angle < -67.5:
+            return 4
+        if -67.5 <= angle < -22.5:
+            return 5
 
         return STOP_COMMAND
 

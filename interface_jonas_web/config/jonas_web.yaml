@@ -1,0 +1,14 @@
+safety_gateway_node:
+  ros__parameters:
+    input_topic: "/jonas/web/cmd_vel_raw"
+    output_topic: "mov_coms_topic"
+    enable_topic: "/jonas/web/enable"
+    base_status_topic: "/jonas/web/base_status"
+    max_linear_x: 0.30
+    max_linear_y: 0.30
+    max_angular_z: 0.80
+    command_timeout_sec: 0.5
+    publish_rate_hz: 10.0
+    require_enable: true
+    deadzone: 0.03
+    keepalive_sec: 0.5
