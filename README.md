@@ -35,6 +35,8 @@ Keep only this repository inside `~/jonas_ws/src` for Jonas.
 Additional files:
 
 - `NODE_ARCHITECTURE.md`: node, topic, service, and hardware architecture.
+- `config/hardware_devices.json`: central device map for Dynamixel and the
+  three wheel Arduinos.
 - `docs/jonas_node_architecture.svg`: architecture diagram.
 - `rpi4_jonas.sh`: Raspberry Pi setup helper for ROS 2 Humble, runtime
   packages, serial permissions, and udev rules.
@@ -333,7 +335,19 @@ source ~/jonas_ws/install/setup.bash
 
 ## Serial Ports
 
-The current code uses stable udev aliases:
+The current code reads device paths from the central hardware file:
+
+```text
+src/jonas/config/hardware_devices.json
+```
+
+That file is outside the ROS package directory `src/jonas/jonas`, so it can be
+shared by the ROS packages and by the standalone scripts in
+`src/config_python_codes`. Change the ports there when the hardware layout
+changes. The environment variable `JONAS_HARDWARE_CONFIG` can point all loaders
+to another file without editing code.
+
+By default the central file uses stable udev aliases:
 
 | Hardware | Alias |
 | --- | --- |

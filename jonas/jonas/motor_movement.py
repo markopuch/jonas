@@ -11,19 +11,26 @@ from std_msgs.msg import Bool, Int16MultiArray
 from dynamixel_sdk import COMM_SUCCESS, PacketHandler, PortHandler
 from jonas_interfaces.srv import Sequence
 
+try:
+    from .hardware_config import load_dynamixel_config
+except ImportError:  # pragma: no cover - permite pruebas directas
+    from hardware_config import load_dynamixel_config  # type: ignore
+
 
 class Robot(Node):
     def __init__(self):
         super().__init__('joint_node')
+        self.hardware_config = load_dynamixel_config()
+        joint_count = len(self.hardware_config.motor_ids)
 
         # Joint variables
-        self.q_des = np.array([2048, 2048, 2048, 2048, 2048, 2048], dtype=int)
-        self.q_act = np.array([2048, 2048, 2048, 2048, 2048, 2048], dtype=int)
+        self.q_des = np.full(joint_count, 2048, dtype=int)
+        self.q_act = np.full(joint_count, 2048, dtype=int)
 
         # General variables
-        self.dxl_id = np.array([1, 2, 3, 4, 5, 6], dtype=int)
-        self.dxl_status = np.array([0, 0, 0, 0, 0, 0], dtype=int)
-        self.dxl_speed = 175
+        self.dxl_id = np.array(self.hardware_config.motor_ids, dtype=int)
+        self.dxl_status = np.zeros(joint_count, dtype=int)
+        self.dxl_speed = self.hardware_config.moving_speed
 
         # Server variables
         self.sequence_active = False
@@ -41,9 +48,16 @@ class Robot(Node):
         self.addr_mov_status = 46
 
         # General settings
-        self.protocol_version = 1.0
-        self.baudrate = 1000000
-        self.device = '/dev/jonas_usb0'
+        self.protocol_version = self.hardware_config.protocol_version
+        self.baudrate = self.hardware_config.baudrate
+        self.device = self.hardware_config.port
+
+        self.get_logger().info(
+            'Configuracion Dynamixel: '
+            f'{self.device}, baudrate {self.baudrate}, '
+            f'motores {list(self.dxl_id)} '
+            f'({self.hardware_config.source})'
+        )
 
         self.port_handler = PortHandler(self.device)
         self.packet_handler = PacketHandler(self.protocol_version)
@@ -123,12 +137,12 @@ class Robot(Node):
             self.get_logger().warning('Invalid joint array, try again.')
 
     def set_position(self):
-        for motor_id in self.dxl_id:
+        for index, motor_id in enumerate(self.dxl_id):
             dxl_comm_result, dxl_error = self.packet_handler.write2ByteTxRx(
                 self.port_handler,
                 int(motor_id),
                 self.addr_goal_position,
-                int(self.q_des[motor_id - 1]),
+                int(self.q_des[index]),
             )
             self._verify_result(dxl_comm_result, dxl_error, motor_id, 'goal position')
 
@@ -137,13 +151,13 @@ class Robot(Node):
     def update_status(self):
         mask = 0
 
-        for motor_id in self.dxl_id:
+        for index, motor_id in enumerate(self.dxl_id):
             status, dxl_comm_result, dxl_error = self.packet_handler.read1ByteTxRx(
                 self.port_handler, int(motor_id), self.addr_mov_status
             )
             self._verify_result(dxl_comm_result, dxl_error, motor_id, 'status read')
 
-            self.dxl_status[motor_id - 1] = status
+            self.dxl_status[index] = status
             mask += status
 
         if mask == 0:
@@ -186,6 +200,7 @@ def main(args=None):
 
     try:
         robot = Robot()
+        loop_period = robot.hardware_config.poll_interval
 
         while rclpy.ok():
             rclpy.spin_once(robot, timeout_sec=0.01)

@@ -1,0 +1,28 @@
+{
+  "devices": {
+    "dynamixel": {
+      "port": "/dev/ttyUSB1",
+      "baudrate": 1000000,
+      "protocol_version": 1.0,
+      "motor_ids": [1, 2, 3, 4, 5, 6],
+      "moving_speed": 175,
+      "step_delay": 0.5,
+      "settle_timeout": 8.0,
+      "poll_interval": 0.1
+    },
+    "wheels": {
+      "baudrate": 9600,
+      "boot_delay": 2.0,
+      "response_delay": 0.15,
+      "arduino_1": {
+        "port": "/dev/ttyUSB2"
+      },
+      "arduino_2": {
+        "port": "/dev/ttyUSB3"
+      },
+      "arduino_3": {
+        "port": "/dev/ttyUSB0"
+      }
+    }
+  }
+}

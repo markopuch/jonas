@@ -7,6 +7,11 @@ import time
 import numpy as np
 import serial
 
+try:
+    from .hardware_config import load_wheels_config
+except ImportError:  # pragma: no cover - permite pruebas directas
+    from hardware_config import load_wheels_config  # type: ignore
+
 # Dimensiones del robot
 l = 0.18  # Distancia del centro a cada rueda
 r = 0.1524  # Radio de las ruedas
@@ -15,18 +20,19 @@ r = 0.1524  # Radio de las ruedas
 vw_max = 8.5
 
 # Configuracion serial de los arduinos
-SERIAL_PORTS = (
-    '/dev/jonas_usb1',
-    '/dev/jonas_usb2',
-    '/dev/jonas_usb3',
-)
-SERIAL_BAUDRATE = 9600
-SERIAL_BOOT_DELAY = 2.0
-SERIAL_RESPONSE_DELAY = 0.15
+SERIAL_CONFIG = load_wheels_config()
+SERIAL_PORTS = SERIAL_CONFIG.ports
+SERIAL_BAUDRATE = SERIAL_CONFIG.baudrate
+SERIAL_BOOT_DELAY = SERIAL_CONFIG.boot_delay
+SERIAL_RESPONSE_DELAY = SERIAL_CONFIG.response_delay
 
 arduino1 = None
 arduino2 = None
 arduino3 = None
+
+
+def get_serial_config():
+    return SERIAL_CONFIG
 
 
 def initialize_serial_ports():

@@ -8,6 +8,7 @@ from std_msgs.msg import Int16MultiArray
 
 from .jonas_functions import (
     close_serial_ports,
+    get_serial_config,
     send_vel_robot,
     vx_max,
     vxy_max,
@@ -19,6 +20,12 @@ from .jonas_functions import (
 class JonasControl(Node):
     def __init__(self):
         super().__init__('jonas_control')
+        serial_config = get_serial_config()
+        self.get_logger().info(
+            'Puertos de ruedas: '
+            f'{", ".join(serial_config.ports)} '
+            f'({serial_config.source})'
+        )
         self.create_subscription(
             Int16MultiArray,
             'mov_coms_topic',
